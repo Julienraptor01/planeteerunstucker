@@ -1,0 +1,77 @@
+plugins {
+	id 'fabric-loom' version '1.9-SNAPSHOT'
+	id 'maven-publish'
+}
+
+version = "${project.version}+${project.minecraft_version}"
+group = "${project.maven_group}"
+
+base {
+	archivesName = project.archives_base_name
+}
+
+repositories {
+	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
+	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
+	// for more information about repositories.
+}
+
+loom {
+	mixin {
+		useLegacyMixinAp = false
+	}
+}
+
+dependencies {
+	// To change the versions see the gradle.properties file
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+}
+
+processResources {
+	//declare the array so that it can be used for both the inputs and the filesMatching
+	def properties = [
+		"version": version,
+		"minecraft_version": minecraft_version,
+		"loader_version": loader_version,
+		"java_version": java_version
+	]
+
+	inputs.properties(properties)
+
+	filesMatching("fabric.mod.json") {
+		expand(properties)
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+}
+
+java {
+	withSourcesJar()
+
+	def javaVersion = JavaVersion.VERSION_21
+
+	sourceCompatibility = javaVersion
+	targetCompatibility = javaVersion
+}
+
+jar {
+	from("LICENSE.md")
+}
+
+publishing {
+	publications {
+		create('mavenJava', MavenPublication) {
+			artifactId = archives_base_name
+			//noinspection GroovyAssignabilityCheck
+			from components.java
+		}
+	}
+
+	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+	repositories {
+	}
+}
